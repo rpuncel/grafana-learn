@@ -1,7 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch",
       "Bash(grep -E \"^-.*\\\\.\\(md|MD\\)$|^-.*AGENTS|^-.*CLAUDE|^-.*CONTEXT\")",
       "Bash(grep -E \"\\\\.\\(py|jsonnet|yaml|md|json|toml\\)$\")",
       "Bash(git status)",
@@ -9,6 +8,7 @@
       "Bash(git diff *)",
       "Bash(git branch *)",
       "Bash(git ls-tree *)",
+      "Bash(git ls-remote *)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push origin issue-*)",
@@ -22,13 +22,22 @@
       "Bash(jb *)",
       "Bash(gcx resources validate *)",
       "Bash(gcx dev lint run *)",
-      "Bash(gcx resources push *)",
-      "Bash(gcx resources pull *)",
-      "Bash(docker compose up *)",
-      "Bash(docker compose down)",
-      "Bash(poetry install)",
+      "Bash(gcx --version)",
+      "Bash(gcx config *)",
+      "Bash(gcx resources *)",
+      "Bash(docker-compose up *)",
+      "Bash(docker-compose down)",
+      "Bash(docker-compose logs *)",
+      "Bash(docker-compose restart *)",
+      "Bash(poetry install *)",
       "Bash(poetry run pyright *)",
-      "Bash(curl -fsSL https://raw.githubusercontent.com/*)"
+      "Bash(poetry run pytest *)",
+      "Bash(poetry show *)",
+      "Bash(curl -fsSL https://raw.githubusercontent.com/*)",
+      "Bash(curl -s http://localhost:3000/api/datasources)",
+      "Bash(curl -s http://localhost:3001/api/datasources)",
+      "Bash(python3 -c \"import sys,json; ds=json.load\\(sys.stdin\\); [print\\(d['uid'], d['type'], d['url']\\) for d in ds] if ds else print\\('empty'\\)\")",
+      "Bash(make deploy-grafonnet *)"
     ]
   }
 }
