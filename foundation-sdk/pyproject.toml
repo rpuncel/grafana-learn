@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "foundation-sdk"
+version = "0.1.0"
+description = "Grafana Learning Lab — Foundation SDK track"
+authors = ["rpuncel <rpuncel@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "." }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+requests = "^2.31"
+# grafana-foundation-sdk is the official Grafana Python SDK.
+# Uncomment once the package is available on PyPI under its final name:
+# grafana-foundation-sdk = "*"
+grafana-foundation-sdk = "^1769699998!10.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1"
+pytest = "^9.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+include = ["foundation-sdk"]

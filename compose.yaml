@@ -1,0 +1,95 @@
+# Top-level Docker Compose for Grafana Learning Lab
+#
+# Stands up the shared observability stack plus two Grafana instances:
+#   - grafana-grafonnet (port 3000) — Grafonnet track
+#   - grafana-sdk        (port 3001) — Foundation SDK track
+#
+# The OTel Demo can be added later via an `include` directive once the core
+# stack is stable.
+
+services:
+  # ── Shared observability backends ──────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+      - "--web.enable-remote-write-receiver"
+    volumes:
+      - ./shared/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    command: -config.file=/etc/loki/config.yaml
+    volumes:
+      - ./shared/loki/config.yaml:/etc/loki/config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:latest
+    container_name: tempo
+    command: -config.file=/etc/tempo/config.yaml
+    volumes:
+      - ./shared/tempo/config.yaml:/etc/tempo/config.yaml:ro
+      - tempo-data:/tmp/tempo
+    ports:
+      - "3200:3200"
+      - "4317"
+      - "4318"
+    restart: unless-stopped
+
+  # ── Grafana instances ──────────────────────────────────────────────────────
+  grafana-grafonnet:
+    image: grafana/grafana:13.0.1
+    container_name: grafana-grafonnet
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_SERVER_HTTP_PORT=3000
+    volumes:
+      - ./shared/provisioning:/etc/grafana/provisioning:ro
+      - grafana-grafonnet-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    restart: unless-stopped
+
+  grafana-sdk:
+    image: grafana/grafana:13.0.1
+    container_name: grafana-sdk
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_SERVER_HTTP_PORT=3000
+    volumes:
+      - ./shared/provisioning:/etc/grafana/provisioning:ro
+      - grafana-sdk-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  loki-data:
+  tempo-data:
+  grafana-grafonnet-data:
+  grafana-sdk-data:
