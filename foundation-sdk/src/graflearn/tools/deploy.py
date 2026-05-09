@@ -18,6 +18,7 @@ from grafana_foundation_sdk.models.text import TextMode
 
 from graflearn.dashboards.fleet_overview import build_fleet_overview_dashboard
 from graflearn.dashboards.service_dashboard import build_service_dashboard
+from graflearn.dashboards.traces_drilldown import build_traces_drilldown_dashboard
 
 
 GRAFANA_URL = "http://localhost:3001"
@@ -92,6 +93,7 @@ def main() -> None:
         build_placeholder_dashboard(),
         build_fleet_overview_dashboard(),
         build_service_dashboard(),
+        build_traces_drilldown_dashboard(),
     ]:
         deploy_dashboard(dashboard)
 

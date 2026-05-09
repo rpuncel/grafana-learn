@@ -17,4 +17,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-testpaths = ["grafonnet/tests"]
+testpaths = ["grafonnet/tests", "tests/integration"]

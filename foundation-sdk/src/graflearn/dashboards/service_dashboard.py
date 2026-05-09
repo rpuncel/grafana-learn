@@ -17,6 +17,13 @@ from grafana_foundation_sdk.models.dashboard import (
     VariableRefresh,
 )
 
+_TRACES_DRILLDOWN_LINK = (
+    DashboardLink("View Traces")
+    .url("/d/traces-drilldown?var-service=${service}&${__url_time_range}")
+    .type(DashboardLinkType.LINK)
+    .target_blank(False)
+)
+
 _PROMETHEUS = DataSourceRef(type_val="prometheus", uid="prometheus")
 
 
@@ -80,6 +87,7 @@ def build_service_dashboard() -> Any:
             .legend_format("p99")
         )
         .unit("s")
+        .data_links([_TRACES_DRILLDOWN_LINK])
         .grid_pos(GridPos(h=8, w=24, x=0, y=8))
     )
 

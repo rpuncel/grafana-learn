@@ -56,6 +56,11 @@ local latencyPanel =
     + promQuery.withLegendFormat('p99'),
   ])
   + ts.standardOptions.withUnit('s')
+  + ts.standardOptions.withLinks([{
+    title: 'View Traces',
+    url: '/d/traces-drilldown?var-service=${service}&${__url_time_range}',
+    targetBlank: false,
+  }])
   + ts.panelOptions.withGridPos(h=8, w=24, x=0, y=8);
 
 g.dashboard.new('Service Dashboard')
