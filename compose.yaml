@@ -50,7 +50,7 @@ services:
 
   # ── Grafana instances ──────────────────────────────────────────────────────
   grafana-grafonnet:
-    image: grafana/grafana:10.4.0
+    image: grafana/grafana:13.0.1
     container_name: grafana-grafonnet
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
@@ -69,7 +69,7 @@ services:
     restart: unless-stopped
 
   grafana-sdk:
-    image: grafana/grafana:10.4.0
+    image: grafana/grafana:13.0.1
     container_name: grafana-sdk
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
