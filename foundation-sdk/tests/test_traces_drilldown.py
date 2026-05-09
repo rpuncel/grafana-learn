@@ -35,9 +35,9 @@ def test_panel_count():
     assert len(_serialise()["panels"]) == 1
 
 
-def test_panel_type_traces():
+def test_panel_type_table():
     panel = _serialise()["panels"][0]
-    assert panel["type"] == "traces"
+    assert panel["type"] == "table"
 
 
 def test_panel_title():

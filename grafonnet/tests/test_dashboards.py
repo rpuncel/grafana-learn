@@ -149,8 +149,8 @@ class TestTracesDrilldown:
     def test_panel_count(self):
         assert len(self.dash["panels"]) == 1
 
-    def test_panel_type_traces(self):
-        assert self.dash["panels"][0]["type"] == "traces"
+    def test_panel_type_table(self):
+        assert self.dash["panels"][0]["type"] == "table"
 
     def test_panel_title(self):
         assert self.dash["panels"][0]["title"] == "Traces"
