@@ -4,7 +4,6 @@ local grafonnet = import 'github.com/grafana/grafonnet/gen/grafonnet-v11.4.0/mai
 
 local dashboard = grafonnet.dashboard;
 local panel = grafonnet.panel;
-local row = grafonnet.panel.row;
 local text = grafonnet.panel.text;
 
 dashboard.new('Placeholder — Grafonnet Track')

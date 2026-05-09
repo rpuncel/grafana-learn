@@ -10,49 +10,53 @@ import sys
 from typing import Any
 
 import requests
+from grafana_foundation_sdk.builders.dashboard import Dashboard
+from grafana_foundation_sdk.builders.text import Panel as TextPanel
+from grafana_foundation_sdk.cog.encoder import JSONEncoder
+from grafana_foundation_sdk.models.dashboard import GridPos
+from grafana_foundation_sdk.models.text import TextMode
 
 
 GRAFANA_URL = "http://localhost:3001"
 DASHBOARDS_ENDPOINT = f"{GRAFANA_URL}/api/dashboards/db"
 
+_PANEL_CONTENT = (
+    "## Foundation SDK Track — Placeholder\n\n"
+    "This dashboard is a scaffold confirming that the "
+    "Grafana Foundation SDK toolchain is wired up correctly.\n\n"
+    "Feature dashboards (Fleet Overview, Service Dashboard, "
+    "Drill-downs) are implemented in subsequent issues."
+)
 
-def build_placeholder_dashboard() -> dict[str, Any]:
-    """Return a minimal Grafana dashboard definition."""
-    return {
-        "id": None,
-        "uid": "sdk-placeholder",
-        "title": "Placeholder — Foundation SDK Track",
-        "description": (
+
+def build_placeholder_dashboard() -> Any:
+    """Return a Grafana dashboard object built with the Foundation SDK."""
+    panel = (
+        TextPanel()
+        .title("Welcome")
+        .description("Placeholder panel")
+        .mode(TextMode.MARKDOWN)
+        .content(_PANEL_CONTENT)
+        .grid_pos(GridPos(h=8, w=24, x=0, y=0))
+    )
+
+    return (
+        Dashboard("Placeholder — Foundation SDK Track")
+        .uid("sdk-placeholder")
+        .description(
             "Scaffold placeholder confirming the Foundation SDK toolchain "
             "is wired up correctly. Feature dashboards are implemented in "
             "subsequent issues."
-        ),
-        "tags": ["placeholder", "sdk"],
-        "timezone": "browser",
-        "refresh": "30s",
-        "schemaVersion": 39,
-        "panels": [
-            {
-                "id": 1,
-                "type": "text",
-                "title": "Welcome",
-                "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
-                "options": {
-                    "mode": "markdown",
-                    "content": (
-                        "## Foundation SDK Track — Placeholder\n\n"
-                        "This dashboard is a scaffold confirming that the "
-                        "Grafana Foundation SDK toolchain is wired up correctly.\n\n"
-                        "Feature dashboards (Fleet Overview, Service Dashboard, "
-                        "Drill-downs) are implemented in subsequent issues."
-                    ),
-                },
-            }
-        ],
-    }
+        )
+        .tags(["placeholder", "sdk"])
+        .timezone("browser")
+        .refresh("30s")
+        .with_panel(panel)
+        .build()
+    )
 
 
-def deploy_dashboard(dashboard: dict[str, Any]) -> None:
+def deploy_dashboard(dashboard: Any) -> None:
     """POST a dashboard payload to the Grafana HTTP API."""
     payload: dict[str, Any] = {
         "dashboard": dashboard,
@@ -64,7 +68,7 @@ def deploy_dashboard(dashboard: dict[str, Any]) -> None:
     response = requests.post(
         DASHBOARDS_ENDPOINT,
         headers={"Content-Type": "application/json"},
-        data=json.dumps(payload),
+        data=json.dumps(payload, cls=JSONEncoder),
         timeout=10,
     )
 
