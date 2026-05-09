@@ -1,6 +1,6 @@
 # Two Grafana instances sharing one observability backend
 
-The repo has two parallel learning tracks (Grafonnet and SDK) that each deploy dashboards independently. Rather than sharing one Grafana instance with folder-based separation, we run two separate Grafana services in Docker Compose — one per track — both pointing to the same Prometheus, Loki, and Tempo backend. This keeps the deployment toolchains (`grr` vs Python API) completely isolated: no ambiguity about which tool created a given dashboard. Grafana itself is lightweight, so the overhead of a second instance is negligible compared to the clarity gained.
+The repo has two parallel learning tracks (Grafonnet and SDK) that each deploy dashboards independently. Rather than sharing one Grafana instance with folder-based separation, we run two separate Grafana services in Docker Compose — one per track — both pointing to the same Prometheus, Loki, and Tempo backend. This keeps the deployment toolchains (`gcx` vs Python API) completely isolated: no ambiguity about which tool created a given dashboard. Grafana itself is lightweight, so the overhead of a second instance is negligible compared to the clarity gained.
 
 ## Considered Options
 

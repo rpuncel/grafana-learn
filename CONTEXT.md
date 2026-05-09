@@ -51,7 +51,7 @@ _Avoid_: Event marker, deployment marker
 ### Learning Tracks
 
 **Grafonnet track**:
-The implementation track that uses Grafonnet (Jsonnet library) and Grizzly to define and deploy dashboards. Toolchain: `jb`, `go-jsonnet`, `grr`.
+The implementation track that uses Grafonnet (Jsonnet library) and gcx to define and deploy dashboards. Toolchain: `jb`, `jsonnet`, `gcx`.
 _Avoid_: Jsonnet track
 
 **SDK track**:
