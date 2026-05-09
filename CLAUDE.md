@@ -7,6 +7,11 @@ All Python work in this repo uses Poetry. Never use `pip`, `pip3`, or `requireme
 - **Adding dependencies**: `poetry -C <dir> add <package>` from root, or `poetry add <package>` from within the subdirectory
 - **Tests**: always write pytest tests in the appropriate `tests/` directory — never one-off `python -c` or standalone scripts
 
+### foundation-sdk specifics
+
+- Install: `poetry install --no-root --with dev` from within `foundation-sdk/` — plain `poetry install` fails because `packages = [{ include = "." }]` in its pyproject.toml
+- SDK builder API reference: `foundation-sdk/sdk-api-notes.md` — read this before writing SDK dashboard code to avoid needing runtime introspection
+
 ## Agent skills
 
 ### Issue tracker
