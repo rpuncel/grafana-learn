@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(grep -E \"^-.*\\\\.\\(md|MD\\)$|^-.*AGENTS|^-.*CLAUDE|^-.*CONTEXT\")",
+      "Bash(grep -E \"\\\\.\\(py|jsonnet|yaml|md|json|toml\\)$\")",
+      "Bash(git ls-tree *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push origin issue-*)",
+      "Bash(git push -u origin issue-*)",
+      "Bash(git worktree add *)",
+      "Bash(gh issue *)",
+      "Bash(gh label *)",
+      "Bash(gh pr create *)",
+      "Bash(jsonnet *)",
+      "Bash(pyright *)",
+      "Bash(jb *)",
+      "Bash(grr validate *)",
+      "Bash(grr apply *)",
+      "Bash(docker compose up *)",
+      "Bash(docker compose down)",
+      "Bash(poetry install)",
+      "Bash(poetry run pyright *)",
+      "Bash(curl -fsSL https://raw.githubusercontent.com/*)"
+    ]
+  }
+}
