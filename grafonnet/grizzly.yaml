@@ -1,0 +1,6 @@
+apiVersion: v1alpha1
+targets: {}
+grafana:
+  url: http://localhost:3000
+  user: ""
+  token: ""
