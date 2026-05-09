@@ -1,4 +1,4 @@
-"""Deploy a placeholder dashboard to the Foundation SDK Grafana instance.
+"""Deploy all dashboards to the Foundation SDK Grafana instance.
 
 Targets http://localhost:3001 (grafana-sdk container, anonymous admin auth).
 """
@@ -15,6 +15,9 @@ from grafana_foundation_sdk.builders.text import Panel as TextPanel
 from grafana_foundation_sdk.cog.encoder import JSONEncoder
 from grafana_foundation_sdk.models.dashboard import GridPos
 from grafana_foundation_sdk.models.text import TextMode
+
+from graflearn.dashboards.fleet_overview import build_fleet_overview_dashboard
+from graflearn.dashboards.service_dashboard import build_service_dashboard
 
 
 GRAFANA_URL = "http://localhost:3001"
@@ -85,8 +88,12 @@ def deploy_dashboard(dashboard: Any) -> None:
 
 
 def main() -> None:
-    dashboard = build_placeholder_dashboard()
-    deploy_dashboard(dashboard)
+    for dashboard in [
+        build_placeholder_dashboard(),
+        build_fleet_overview_dashboard(),
+        build_service_dashboard(),
+    ]:
+        deploy_dashboard(dashboard)
 
 
 if __name__ == "__main__":

@@ -4,8 +4,9 @@
 #   - grafana-grafonnet (port 3000) — Grafonnet track
 #   - grafana-sdk        (port 3001) — Foundation SDK track
 #
-# The OTel Demo can be added later via an `include` directive once the core
-# stack is stable.
+# Also runs an OpenTelemetry Collector (otelcol) and six metric-generator
+# containers that simulate OTel Demo services sending http.server.request.duration
+# metrics, giving the Fleet Overview and Service Dashboard real data to display.
 
 services:
   # ── Shared observability backends ──────────────────────────────────────────
@@ -46,6 +47,72 @@ services:
       - "3200:3200"
       - "4317"
       - "4318"
+    restart: unless-stopped
+
+  # ── OpenTelemetry Collector ────────────────────────────────────────────────
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otelcol
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./shared/otelcol/config.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "8889:8889"   # Prometheus scrape endpoint
+    depends_on:
+      - tempo
+    restart: unless-stopped
+
+  # ── Simulated demo services (metric generators) ────────────────────────────
+  # Each container sends http.server.request.duration metrics for one service.
+  # Service names match the OTel Demo naming convention.
+  metric-gen-frontend:
+    build: ./metric-generator
+    environment:
+      - SERVICE_NAME=frontend
+      - ERROR_RATE=0.02
+    depends_on: [otelcol]
+    restart: unless-stopped
+
+  metric-gen-checkout:
+    build: ./metric-generator
+    environment:
+      - SERVICE_NAME=checkoutservice
+      - ERROR_RATE=0.03
+    depends_on: [otelcol]
+    restart: unless-stopped
+
+  metric-gen-cart:
+    build: ./metric-generator
+    environment:
+      - SERVICE_NAME=cartservice
+      - ERROR_RATE=0.01
+    depends_on: [otelcol]
+    restart: unless-stopped
+
+  metric-gen-payment:
+    build: ./metric-generator
+    environment:
+      - SERVICE_NAME=paymentservice
+      - ERROR_RATE=0.08
+    depends_on: [otelcol]
+    restart: unless-stopped
+
+  metric-gen-shipping:
+    build: ./metric-generator
+    environment:
+      - SERVICE_NAME=shippingservice
+      - ERROR_RATE=0.02
+    depends_on: [otelcol]
+    restart: unless-stopped
+
+  metric-gen-recommendation:
+    build: ./metric-generator
+    environment:
+      - SERVICE_NAME=recommendationservice
+      - ERROR_RATE=0.01
+    depends_on: [otelcol]
     restart: unless-stopped
 
   # ── Grafana instances ──────────────────────────────────────────────────────

@@ -1,3 +1,17 @@
+## Python tooling
+
+All Python work in this repo uses Poetry. Never use `pip`, `pip3`, or `requirements.txt`.
+
+- **SDK track**: `poetry -C foundation-sdk run <cmd>` (e.g. `poetry -C foundation-sdk run pytest`, `poetry -C foundation-sdk run python deploy.py`)
+- **Grafonnet tests**: `poetry run pytest` from the repo root (root `pyproject.toml`, `testpaths = ["grafonnet/tests"]`)
+- **Adding dependencies**: `poetry -C <dir> add <package>` from root, or `poetry add <package>` from within the subdirectory
+- **Tests**: always write pytest tests in the appropriate `tests/` directory — never one-off `python -c` or standalone scripts
+
+### foundation-sdk specifics
+
+- Install: `poetry install --no-root --with dev` from within `foundation-sdk/` — plain `poetry install` fails because `packages = [{ include = "." }]` in its pyproject.toml
+- SDK builder API reference: `foundation-sdk/sdk-api-notes.md` — read this before writing SDK dashboard code to avoid needing runtime introspection
+
 ## Agent skills
 
 ### Issue tracker
