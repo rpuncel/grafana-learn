@@ -21,6 +21,6 @@ deploy-grafonnet:
 
 deploy-sdk:
 	poetry -C foundation-sdk run pyright
-	cd foundation-sdk && poetry run python deploy.py
+	cd foundation-sdk && poetry run python src/graflearn/tools/deploy.py
 
 deploy: deploy-grafonnet deploy-sdk

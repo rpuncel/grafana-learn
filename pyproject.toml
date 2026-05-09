@@ -10,6 +10,7 @@ requests = "^2.31"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0"
+pyright = "^1.1.409"
 
 [build-system]
 requires = ["poetry-core"]
