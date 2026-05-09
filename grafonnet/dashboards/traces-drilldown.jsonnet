@@ -14,9 +14,10 @@ local serviceVar =
   + var.query.refresh.onTime()
   + var.query.selectionOptions.withIncludeAll(false);
 
-// Grafana's traces panel type has no Grafonnet builder; construct the raw object.
+// The Tempo datasource returns trace search results with preferredVisualisationType: "table".
+// The "traces" panel type only handles single-trace waterfall views; use "table" for search results.
 local tracesPanel = {
-  type: 'traces',
+  type: 'table',
   title: 'Traces',
   datasource: { type: 'tempo', uid: 'tempo' },
   targets: [

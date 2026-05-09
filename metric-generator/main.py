@@ -89,4 +89,4 @@ while True:
         span.set_status(StatusCode.ERROR)
     span.end(end_time=now_ns)
 
-    time.sleep(random.uniform(0.05, 0.2))
+    time.sleep(random.uniform(1, 5))
