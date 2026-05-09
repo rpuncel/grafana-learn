@@ -1,7 +1,7 @@
 """Spot-check integration tests: verify that live data is visible in Grafana.
 
-These tests require Grafana, Prometheus, and Tempo to be running locally
-(docker-compose up). They are skipped automatically if Grafana is unreachable.
+These tests run against both Grafana instances (grafonnet track on :3000,
+SDK track on :3001). Each instance is skipped automatically if unreachable.
 """
 
 from __future__ import annotations
@@ -10,27 +10,23 @@ import time
 
 import requests
 
-GRAFANA_URL = "http://localhost:3000"
-PROMETHEUS_PROXY = f"{GRAFANA_URL}/api/datasources/proxy/uid/prometheus"
-TEMPO_PROXY = f"{GRAFANA_URL}/api/datasources/proxy/uid/tempo"
 
-
-def test_prometheus_datasource_configured():
-    resp = requests.get(f"{GRAFANA_URL}/api/datasources/uid/prometheus", timeout=5)
+def test_prometheus_datasource_configured(grafana_url):
+    resp = requests.get(f"{grafana_url}/api/datasources/uid/prometheus", timeout=5)
     resp.raise_for_status()
     assert resp.json()["type"] == "prometheus"
 
 
-def test_tempo_datasource_configured():
-    resp = requests.get(f"{GRAFANA_URL}/api/datasources/uid/tempo", timeout=5)
+def test_tempo_datasource_configured(grafana_url):
+    resp = requests.get(f"{grafana_url}/api/datasources/uid/tempo", timeout=5)
     resp.raise_for_status()
     assert resp.json()["type"] == "tempo"
 
 
-def test_prometheus_has_http_metrics():
+def test_prometheus_has_http_metrics(grafana_url):
     """At least one service is emitting HTTP request duration metrics."""
     resp = requests.get(
-        f"{PROMETHEUS_PROXY}/api/v1/query",
+        f"{grafana_url}/api/datasources/proxy/uid/prometheus/api/v1/query",
         params={"query": "count(http_server_request_duration_seconds_count)"},
         timeout=5,
     )
@@ -42,11 +38,11 @@ def test_prometheus_has_http_metrics():
     assert float(result[0]["value"][1]) > 0
 
 
-def test_tempo_has_traces():
+def test_tempo_has_traces(grafana_url):
     """Tempo has at least one trace ingested in the last hour."""
     now = int(time.time())
     resp = requests.get(
-        f"{TEMPO_PROXY}/api/search",
+        f"{grafana_url}/api/datasources/proxy/uid/tempo/api/search",
         params={"q": "{}", "limit": 1, "start": now - 3600, "end": now},
         timeout=5,
     )
