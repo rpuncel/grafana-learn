@@ -1,7 +1,7 @@
 """Traces Drill-down — Foundation SDK track.
 
-$service variable; one traces panel querying Tempo with TraceQL.
-Grafana's traces panel type has no SDK builder, so Panel is constructed directly.
+$service variable; one table panel querying Tempo with TraceQL search.
+Grafana's traces panel type only renders single-trace waterfall views; table is used for search results.
 """
 
 from __future__ import annotations
@@ -25,12 +25,12 @@ _TEMPO = DataSourceRef(type_val="tempo", uid="tempo")
 
 
 class _TracesPanel(cogbuilder.Builder[Panel]):
-    """Minimal builder wrapping Grafana's native 'traces' panel type."""
+    """Minimal builder for a table panel rendering Tempo trace search results."""
 
     _internal: Panel
 
     def __init__(self) -> None:
-        self._internal = Panel(type_val="traces")
+        self._internal = Panel(type_val="table")
 
     def build(self) -> Panel:
         return self._internal
