@@ -1,0 +1,3 @@
+# Both tracks implement the same feature set
+
+The Grafonnet track and SDK track implement identical dashboard features — the same three-level hierarchy, the same navigation patterns (dashboard links, data links, template variables), and the same panel types — rather than partitioning different features across tracks. This enables direct side-by-side comparison of how each toolchain expresses the same intent in code. Where a feature is genuinely awkward in one tool, it is omitted from that track and documented with a reason in the track's README, rather than worked around with a poor implementation.
