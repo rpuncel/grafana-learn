@@ -25,4 +25,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.pyright]
 pythonVersion = "3.11"
 typeCheckingMode = "basic"
-include = ["foundation-sdk"]
+include = ["."]
