@@ -1,0 +1,6 @@
+contexts:
+  default:
+    grafana:
+      server: http://localhost:3000
+      org-id: 1
+current-context: default

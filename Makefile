@@ -1,5 +1,7 @@
 .PHONY: up down deploy deploy-grafonnet deploy-sdk
 
+GCX := gcx --config grafonnet/.gcx.yaml
+
 # ── Infrastructure ─────────────────────────────────────────────────────────
 
 up:
@@ -15,8 +17,7 @@ deploy-grafonnet:
 	for f in grafonnet/dashboards/*.jsonnet; do \
 		jsonnet -J grafonnet/vendor "$$f" > grafonnet/resources/$$(basename "$$f" .jsonnet).json; \
 	done
-	gcx resources validate -p grafonnet/resources/
-	gcx resources push -p grafonnet/resources/
+	poetry run python grafonnet/deploy.py
 
 deploy-sdk:
 	poetry run pyright foundation-sdk/
