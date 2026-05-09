@@ -6,7 +6,7 @@ import json
 
 from grafana_foundation_sdk.cog.encoder import JSONEncoder
 
-from service_dashboard import build_service_dashboard
+from graflearn.dashboards.service_dashboard import build_service_dashboard
 
 
 def _serialise() -> dict:

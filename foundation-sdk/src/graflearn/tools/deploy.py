@@ -16,8 +16,8 @@ from grafana_foundation_sdk.cog.encoder import JSONEncoder
 from grafana_foundation_sdk.models.dashboard import GridPos
 from grafana_foundation_sdk.models.text import TextMode
 
-from fleet_overview import build_fleet_overview_dashboard
-from service_dashboard import build_service_dashboard
+from graflearn.dashboards.fleet_overview import build_fleet_overview_dashboard
+from graflearn.dashboards.service_dashboard import build_service_dashboard
 
 
 GRAFANA_URL = "http://localhost:3001"

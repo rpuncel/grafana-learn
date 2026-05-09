@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Grafana Learning Lab — Foundation SDK track"
 authors = ["rpuncel <rpuncel@gmail.com>"]
 readme = "README.md"
-packages = [{ include = "." }]
+packages = [{ include = "graflearn", from="src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"

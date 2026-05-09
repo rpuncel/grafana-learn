@@ -6,7 +6,7 @@ import json
 
 from grafana_foundation_sdk.cog.encoder import JSONEncoder
 
-from fleet_overview import build_fleet_overview_dashboard
+from graflearn.dashboards.fleet_overview import build_fleet_overview_dashboard
 
 
 def _serialise() -> dict:
