@@ -4,11 +4,11 @@
     {
       "source": {
         "git": {
-          "remote": "https://github.com/grafana/grafonnet",
+          "remote": "https://github.com/grafana/grafonnet.git",
           "subdir": "gen/grafonnet-v11.4.0"
         }
       },
-      "version": "v11.4.0"
+      "version": "main"
     }
   ],
   "legacyImports": false
