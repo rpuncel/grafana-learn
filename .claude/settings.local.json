@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "WebSearch"
+      "WebSearch",
+      "Bash(gh issue *)",
+      "Bash(grep -E \"^-.*\\\\.\\(md|MD\\)$|^-.*AGENTS|^-.*CLAUDE|^-.*CONTEXT\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
