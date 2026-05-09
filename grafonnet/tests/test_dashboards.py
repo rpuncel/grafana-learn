@@ -122,3 +122,68 @@ class TestServiceDashboard:
     def test_prometheus_datasource(self):
         for panel in self.dash["panels"]:
             assert panel["datasource"]["type"] == "prometheus"
+
+    def test_latency_panel_data_link_to_traces_drilldown(self):
+        latency = next(p for p in self.dash["panels"] if p["title"] == "Request Duration p99")
+        links = latency["fieldConfig"]["defaults"]["links"]
+        assert any("/d/traces-drilldown" in link["url"] for link in links)
+        assert any("${service}" in link["url"] for link in links)
+
+
+class TestTracesDrilldown:
+    def setup_method(self):
+        self.dash = compile_dashboard("traces-drilldown")
+
+    def test_uid(self):
+        assert self.dash["uid"] == "traces-drilldown"
+
+    def test_title(self):
+        assert self.dash["title"] == "Traces Drill-down"
+
+    def test_tags(self):
+        assert self.dash["tags"] == ["traces-drilldown", "grafonnet"]
+
+    def test_refresh(self):
+        assert self.dash["refresh"] == "30s"
+
+    def test_panel_count(self):
+        assert len(self.dash["panels"]) == 1
+
+    def test_panel_type_traces(self):
+        assert self.dash["panels"][0]["type"] == "traces"
+
+    def test_panel_title(self):
+        assert self.dash["panels"][0]["title"] == "Traces"
+
+    def test_panel_full_width(self):
+        assert self.dash["panels"][0]["gridPos"]["w"] == 24
+
+    def test_panel_datasource_tempo(self):
+        panel = self.dash["panels"][0]
+        assert panel["datasource"]["type"] == "tempo"
+        assert panel["datasource"]["uid"] == "tempo"
+
+    def test_panel_query_uses_service_variable(self):
+        target = self.dash["panels"][0]["targets"][0]
+        assert "${service}" in target["query"]
+
+    def test_panel_query_type_traceql(self):
+        target = self.dash["panels"][0]["targets"][0]
+        assert target.get("queryType") == "traceql"
+
+    def test_service_variable(self):
+        variables = self.dash["templating"]["list"]
+        assert len(variables) == 1
+        v = variables[0]
+        assert v["name"] == "service"
+        assert v["type"] == "query"
+        assert "label_values(http_server_request_duration_seconds_count, service_name)" in v["query"]
+
+    def test_service_variable_datasource(self):
+        v = self.dash["templating"]["list"][0]
+        assert v["datasource"]["type"] == "prometheus"
+
+    def test_dashboard_links(self):
+        urls = [link["url"] for link in self.dash["links"]]
+        assert "/d/fleet-overview" in urls
+        assert "/d/service-dashboard" in urls

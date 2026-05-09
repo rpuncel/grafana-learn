@@ -88,6 +88,13 @@ def test_dashboard_link_to_fleet_overview():
     assert "/d/fleet-overview" in urls
 
 
+def test_latency_panel_data_link_to_traces_drilldown():
+    latency = next(p for p in _serialise()["panels"] if p["title"] == "Request Duration p99")
+    links = latency["fieldConfig"]["defaults"]["links"]
+    assert any("/d/traces-drilldown" in link["url"] for link in links)
+    assert any("${service}" in link["url"] for link in links)
+
+
 def test_prometheus_datasource():
     for panel in _serialise()["panels"]:
         assert panel["datasource"]["type"] == "prometheus"
