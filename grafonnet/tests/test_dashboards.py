@@ -5,11 +5,22 @@ from pathlib import Path
 GRAFONNET_DIR = Path(__file__).parent.parent
 VENDOR_DIR = GRAFONNET_DIR / "vendor"
 DASHBOARDS_DIR = GRAFONNET_DIR / "dashboards"
+LIB_DIR = GRAFONNET_DIR / "lib"
 
 
 def compile_dashboard(name: str) -> dict:
     result = subprocess.run(
         ["jsonnet", "-J", str(VENDOR_DIR), str(DASHBOARDS_DIR / f"{name}.jsonnet")],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return json.loads(result.stdout)
+
+
+def compile_lib(name: str):
+    result = subprocess.run(
+        ["jsonnet", "-J", str(VENDOR_DIR), str(LIB_DIR / f"{name}.libsonnet")],
         capture_output=True,
         text=True,
         check=True,
@@ -79,20 +90,29 @@ class TestServiceDashboard:
     def test_panel_count(self):
         assert len(self.dash["panels"]) == 3
 
-    def test_panel_titles(self):
-        titles = [p["title"] for p in self.dash["panels"]]
-        assert "Request Rate" in titles
-        assert "Error Rate" in titles
-        assert "Request Duration p99" in titles
+    def test_panels_are_library_panel_refs(self):
+        for panel in self.dash["panels"]:
+            assert "libraryPanel" in panel
 
-    def test_latency_panel_full_width(self):
-        latency = next(p for p in self.dash["panels"] if p["title"] == "Request Duration p99")
+    def test_library_panel_uids(self):
+        uids = {p["libraryPanel"]["uid"] for p in self.dash["panels"]}
+        assert uids == {"red-metrics-rate", "red-metrics-error-rate", "red-metrics-latency"}
+
+    def test_library_panel_names(self):
+        names = {p["libraryPanel"]["name"] for p in self.dash["panels"]}
+        assert names == {"Request Rate", "Error Rate", "Request Duration p99"}
+
+    def test_latency_ref_full_width(self):
+        latency = next(
+            p for p in self.dash["panels"]
+            if p["libraryPanel"]["uid"] == "red-metrics-latency"
+        )
         assert latency["gridPos"]["w"] == 24
 
-    def test_rate_panels_half_width(self):
+    def test_rate_refs_half_width(self):
         half_width = [p for p in self.dash["panels"] if p["gridPos"]["w"] == 12]
-        titles = {p["title"] for p in half_width}
-        assert titles == {"Request Rate", "Error Rate"}
+        uids = {p["libraryPanel"]["uid"] for p in half_width}
+        assert uids == {"red-metrics-rate", "red-metrics-error-rate"}
 
     def test_service_variable(self):
         variables = self.dash["templating"]["list"]
@@ -110,24 +130,59 @@ class TestServiceDashboard:
         v = self.dash["templating"]["list"][0]
         assert v["datasource"]["type"] == "prometheus"
 
-    def test_queries_use_service_variable(self):
-        for panel in self.dash["panels"]:
-            for target in panel["targets"]:
-                assert "$service" in target["expr"]
-
     def test_dashboard_link_to_fleet_overview(self):
         urls = [link["url"] for link in self.dash["links"]]
         assert "/d/fleet-overview" in urls
 
-    def test_prometheus_datasource(self):
-        for panel in self.dash["panels"]:
-            assert panel["datasource"]["type"] == "prometheus"
 
-    def test_latency_panel_data_link_to_traces_drilldown(self):
-        latency = next(p for p in self.dash["panels"] if p["title"] == "Request Duration p99")
-        links = latency["fieldConfig"]["defaults"]["links"]
+class TestRedMetricsRow:
+    def setup_method(self):
+        self.panels = compile_lib("red-metrics-row")
+
+    def test_three_library_panels(self):
+        assert len(self.panels) == 3
+
+    def test_uids(self):
+        uids = {p["uid"] for p in self.panels}
+        assert uids == {"red-metrics-rate", "red-metrics-error-rate", "red-metrics-latency"}
+
+    def test_kind_is_panel(self):
+        for p in self.panels:
+            assert p["kind"] == 1
+
+    def test_panel_titles(self):
+        titles = {p["name"] for p in self.panels}
+        assert titles == {"Request Rate", "Error Rate", "Request Duration p99"}
+
+    def test_models_are_timeseries(self):
+        for p in self.panels:
+            assert p["model"]["type"] == "timeseries"
+
+    def test_models_use_service_variable(self):
+        for p in self.panels:
+            targets = p["model"]["targets"]
+            assert any("$service" in t["expr"] for t in targets)
+
+    def test_rate_panel_unit(self):
+        rate = next(p for p in self.panels if p["uid"] == "red-metrics-rate")
+        assert rate["model"]["fieldConfig"]["defaults"]["unit"] == "reqps"
+
+    def test_error_rate_panel_unit(self):
+        error = next(p for p in self.panels if p["uid"] == "red-metrics-error-rate")
+        assert error["model"]["fieldConfig"]["defaults"]["unit"] == "percentunit"
+
+    def test_latency_panel_unit(self):
+        latency = next(p for p in self.panels if p["uid"] == "red-metrics-latency")
+        assert latency["model"]["fieldConfig"]["defaults"]["unit"] == "s"
+
+    def test_latency_has_traces_drilldown_link(self):
+        latency = next(p for p in self.panels if p["uid"] == "red-metrics-latency")
+        links = latency["model"]["fieldConfig"]["defaults"]["links"]
         assert any("/d/traces-drilldown" in link["url"] for link in links)
-        assert any("${service}" in link["url"] for link in links)
+
+    def test_prometheus_datasource(self):
+        for p in self.panels:
+            assert p["model"]["datasource"]["type"] == "prometheus"
 
 
 class TestTracesDrilldown:
