@@ -131,6 +131,33 @@ g.query.tempo.new('tempo', '', [])
 }
 ```
 
+## Transformations
+
+Transformations reshape panel data before rendering. Added via `queryOptions.withTransformations([...])`.
+
+```jsonnet
+local table = g.panel.table;
+
+// Reduce multi-series Prometheus data to a table (one row per service).
+// Use mode 'seriesToRows' for Prometheus output (one frame per series).
+// Use mode 'reduceFields' only for wide-format frames (multiple value columns in one frame).
+table.new('My Table')
++ table.queryOptions.withTransformations([
+  {
+    id: 'reduce',
+    options: {
+      reducers: ['lastNotNull'],  // use lastNotNull (not last) to skip NaN edge values from rate()
+      mode: 'seriesToRows',  // produces one table row per input series
+    },
+  },
+])
+```
+
+Common transformation IDs:
+- `reduce` — collapse a time series to a single stat value per series
+- `renameByRegex` — rename fields by regex: `options: { regex: '(.*)', renamePattern: '$1' }`
+- `joinByField` — join multiple queries into one table by a shared field
+
 ## Dashboard builder
 
 ```jsonnet

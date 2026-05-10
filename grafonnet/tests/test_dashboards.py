@@ -45,13 +45,23 @@ class TestFleetOverview:
         assert self.dash["refresh"] == "30s"
 
     def test_panel_count(self):
-        assert len(self.dash["panels"]) == 3
+        assert len(self.dash["panels"]) == 4
 
     def test_panel_titles(self):
         titles = [p["title"] for p in self.dash["panels"]]
         assert "Request Rate by Service" in titles
         assert "Error Rate by Service" in titles
         assert "Service Topology" in titles
+        assert "Current Error Rate by Service" in titles
+
+    def test_error_rate_summary_panel(self):
+        panel = next(p for p in self.dash["panels"] if p["title"] == "Current Error Rate by Service")
+        assert panel["type"] == "table"
+        assert panel["fieldConfig"]["defaults"]["unit"] == "percentunit"
+        assert len(panel["transformations"]) >= 1
+        assert panel["transformations"][0]["id"] == "reduce"
+        assert panel["transformations"][0]["options"]["mode"] == "seriesToRows"
+        assert panel["transformations"][0]["options"]["reducers"] == ["lastNotNull"]
 
     def test_panels_full_width(self):
         for panel in self.dash["panels"]:

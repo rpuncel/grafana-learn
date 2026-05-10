@@ -118,6 +118,41 @@ Dashboard('Title')
   .build()
 ```
 
+## Transformations
+
+Transformations reshape panel data before rendering. Use `.with_transformation()` or `.transformations()` on any panel builder.
+
+```python
+from grafana_foundation_sdk.builders.stat import Panel as StatPanel
+from grafana_foundation_sdk.models.dashboard import DataTransformerConfig
+
+from grafana_foundation_sdk.builders.table import Panel as TablePanel
+
+# Use mode "seriesToRows" for Prometheus output (one frame per series).
+# Use mode "reduceFields" only for wide-format frames (multiple value columns in one frame).
+TablePanel()
+    .with_transformation(
+        DataTransformerConfig(
+            id_val="reduce",
+            options={"reducers": ["lastNotNull"], "mode": "seriesToRows"},  # lastNotNull skips NaN edge values from rate()
+        )
+    )
+```
+
+`DataTransformerConfig` fields:
+- `id_val` (str, required) — transformer ID (e.g. `"reduce"`, `"renameByRegex"`, `"joinByField"`)
+- `options` (dict, required) — transformer-specific config
+- `disabled` (bool, optional) — skip this transformation if True
+
+Common transformation IDs:
+- `reduce` — collapse time series to a single value; `options: {"reducers": ["last"], "mode": "reduceFields"}`
+- `renameByRegex` — rename fields by regex; `options: {"regex": "(.*)", "renamePattern": "$1"}`
+- `joinByField` — join multiple queries by a shared field
+
+Panel builder methods:
+- `.with_transformation(DataTransformerConfig)` — append one transformation
+- `.transformations(list[DataTransformerConfig])` — set all transformations at once
+
 ## AnnotationQuery builder
 
 ```python

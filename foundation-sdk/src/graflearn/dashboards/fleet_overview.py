@@ -11,9 +11,10 @@ from typing import Any
 from grafana_foundation_sdk.builders.dashboard import Dashboard, DashboardLink
 from grafana_foundation_sdk.builders.nodegraph import Panel as NodeGraphPanel
 from grafana_foundation_sdk.builders.prometheus import Dataquery as PrometheusQuery
+from grafana_foundation_sdk.builders.table import Panel as TablePanel
 from grafana_foundation_sdk.builders.tempo import TempoQuery
 from grafana_foundation_sdk.builders.timeseries import Panel as TimeseriesPanel
-from grafana_foundation_sdk.models.dashboard import DataSourceRef, DashboardLinkType, GridPos
+from grafana_foundation_sdk.models.dashboard import DataSourceRef, DataTransformerConfig, DashboardLinkType, GridPos
 
 _PROMETHEUS = DataSourceRef(type_val="prometheus", uid="prometheus")
 _TEMPO = DataSourceRef(type_val="tempo", uid="tempo")
@@ -75,6 +76,30 @@ def build_fleet_overview_dashboard() -> Any:
         .grid_pos(GridPos(h=12, w=24, x=0, y=16))
     )
 
+    error_rate_summary_panel = (
+        TablePanel()
+        .title("Current Error Rate by Service")
+        .datasource(_PROMETHEUS)
+        .with_target(
+            PrometheusQuery()
+            .datasource(_PROMETHEUS)
+            .expr(
+                "sum(rate(http_server_request_duration_seconds_count"
+                '{http_response_status_code=~"5.."}[$__rate_interval])) by (service_name)\n'
+                "/ sum(rate(http_server_request_duration_seconds_count[$__rate_interval])) by (service_name)"
+            )
+            .legend_format("{{service_name}}")
+        )
+        .with_transformation(
+            DataTransformerConfig(
+                id_val="reduce",
+                options={"reducers": ["lastNotNull"], "mode": "seriesToRows"},
+            )
+        )
+        .unit("percentunit")
+        .grid_pos(GridPos(h=6, w=24, x=0, y=28))
+    )
+
     return (
         Dashboard("Fleet Overview")
         .uid("fleet-overview")
@@ -88,6 +113,7 @@ def build_fleet_overview_dashboard() -> Any:
         .with_panel(rate_panel)
         .with_panel(error_rate_panel)
         .with_panel(node_graph_panel)
+        .with_panel(error_rate_summary_panel)
         .link(
             DashboardLink("Service Dashboard")
             .url("/d/service-dashboard")
