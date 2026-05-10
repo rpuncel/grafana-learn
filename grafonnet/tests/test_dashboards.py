@@ -187,3 +187,62 @@ class TestTracesDrilldown:
         urls = [link["url"] for link in self.dash["links"]]
         assert "/d/fleet-overview" in urls
         assert "/d/service-dashboard" in urls
+
+
+class TestLogsDrilldown:
+    def setup_method(self):
+        self.dash = compile_dashboard("logs-drilldown")
+
+    def test_uid(self):
+        assert self.dash["uid"] == "logs-drilldown"
+
+    def test_title(self):
+        assert self.dash["title"] == "Logs Drill-down"
+
+    def test_tags(self):
+        assert self.dash["tags"] == ["logs-drilldown", "grafonnet"]
+
+    def test_refresh(self):
+        assert self.dash["refresh"] == "30s"
+
+    def test_panel_count(self):
+        assert len(self.dash["panels"]) == 1
+
+    def test_panel_type_logs(self):
+        assert self.dash["panels"][0]["type"] == "logs"
+
+    def test_panel_title(self):
+        assert self.dash["panels"][0]["title"] == "Logs"
+
+    def test_panel_full_width(self):
+        assert self.dash["panels"][0]["gridPos"]["w"] == 24
+
+    def test_panel_datasource_loki(self):
+        panel = self.dash["panels"][0]
+        assert panel["datasource"]["type"] == "loki"
+        assert panel["datasource"]["uid"] == "loki"
+
+    def test_panel_query_uses_service_variable(self):
+        target = self.dash["panels"][0]["targets"][0]
+        assert "${service}" in target["expr"]
+
+    def test_panel_query_logql_label(self):
+        target = self.dash["panels"][0]["targets"][0]
+        assert "service_name" in target["expr"]
+
+    def test_service_variable(self):
+        variables = self.dash["templating"]["list"]
+        assert len(variables) == 1
+        v = variables[0]
+        assert v["name"] == "service"
+        assert v["type"] == "query"
+        assert "label_values(http_server_request_duration_seconds_count, service_name)" in v["query"]
+
+    def test_service_variable_datasource(self):
+        v = self.dash["templating"]["list"][0]
+        assert v["datasource"]["type"] == "prometheus"
+
+    def test_dashboard_links(self):
+        urls = [link["url"] for link in self.dash["links"]]
+        assert "/d/fleet-overview" in urls
+        assert "/d/service-dashboard" in urls
