@@ -7,6 +7,7 @@ import json
 from grafana_foundation_sdk.cog.encoder import JSONEncoder
 
 from graflearn.dashboards.service_dashboard import build_service_dashboard
+from graflearn.lib.red_metrics_row import ERROR_RATE_UID, LATENCY_UID, RATE_UID
 
 
 def _serialise() -> dict:
@@ -35,22 +36,33 @@ def test_panel_count():
     assert len(_serialise()["panels"]) == 3
 
 
-def test_panel_titles():
-    titles = [p["title"] for p in _serialise()["panels"]]
-    assert "Request Rate" in titles
-    assert "Error Rate" in titles
-    assert "Request Duration p99" in titles
+def test_panels_are_library_panel_refs():
+    for panel in _serialise()["panels"]:
+        assert "libraryPanel" in panel
 
 
-def test_latency_panel_full_width():
-    latency = next(p for p in _serialise()["panels"] if p["title"] == "Request Duration p99")
+def test_library_panel_uids():
+    uids = {p["libraryPanel"]["uid"] for p in _serialise()["panels"]}
+    assert uids == {RATE_UID, ERROR_RATE_UID, LATENCY_UID}
+
+
+def test_library_panel_names():
+    names = {p["libraryPanel"]["name"] for p in _serialise()["panels"]}
+    assert names == {"Request Rate", "Error Rate", "Request Duration p99"}
+
+
+def test_latency_ref_full_width():
+    latency = next(
+        p for p in _serialise()["panels"]
+        if p["libraryPanel"]["uid"] == LATENCY_UID
+    )
     assert latency["gridPos"]["w"] == 24
 
 
-def test_rate_panels_half_width():
+def test_rate_refs_half_width():
     half_width = [p for p in _serialise()["panels"] if p["gridPos"]["w"] == 12]
-    titles = {p["title"] for p in half_width}
-    assert titles == {"Request Rate", "Error Rate"}
+    uids = {p["libraryPanel"]["uid"] for p in half_width}
+    assert uids == {RATE_UID, ERROR_RATE_UID}
 
 
 def test_service_variable():
@@ -77,27 +89,9 @@ def test_service_variable_refresh_on_time_range():
     assert v["refresh"] == 2  # VariableRefresh.ON_TIME_RANGE_CHANGED
 
 
-def test_queries_use_service_variable():
-    for panel in _serialise()["panels"]:
-        for target in panel["targets"]:
-            assert "$service" in target["expr"]
-
-
 def test_dashboard_link_to_fleet_overview():
     urls = [link["url"] for link in _serialise()["links"]]
     assert "/d/fleet-overview" in urls
-
-
-def test_latency_panel_data_link_to_traces_drilldown():
-    latency = next(p for p in _serialise()["panels"] if p["title"] == "Request Duration p99")
-    links = latency["fieldConfig"]["defaults"]["links"]
-    assert any("/d/traces-drilldown" in link["url"] for link in links)
-    assert any("${service}" in link["url"] for link in links)
-
-
-def test_prometheus_datasource():
-    for panel in _serialise()["panels"]:
-        assert panel["datasource"]["type"] == "prometheus"
 
 
 def test_serialises_to_valid_json():

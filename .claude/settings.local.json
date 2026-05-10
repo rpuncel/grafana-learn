@@ -21,7 +21,10 @@
       "Bash(curl -s \"http://localhost:3000/api/datasources/proxy/uid/tempo/api/search?q=%7Bresource.service.name%3D%22cartservice%22%7D&limit=5\")",
       "Bash(make deploy *)",
       "Bash(date -v-5M +%s)",
-      "Bash(curl -s \"http://localhost:3100/loki/api/v1/query_range?query=%7Bservice_name%3D~%22.%2B%22%7D&limit=3&start=$\\(date -v-5M +%s\\)000000000&end=$\\(date +%s\\)000000000\")"
+      "Bash(curl -s \"http://localhost:3100/loki/api/v1/query_range?query=%7Bservice_name%3D~%22.%2B%22%7D&limit=3&start=$\\(date -v-5M +%s\\)000000000&end=$\\(date +%s\\)000000000\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('panels:', len\\(d['panels']\\)\\); [print\\(json.dumps\\(p, indent=2\\)\\) for p in d['panels']]\")",
+      "Bash(poetry -C foundation-sdk run pyright foundation-sdk/src/graflearn/dashboards/service_dashboard.py)",
+      "Bash(poetry -C /Users/rpuncel/Workspaces/grafana/foundation-sdk run pyright /Users/rpuncel/Workspaces/grafana/foundation-sdk/tests/)"
     ]
   }
 }

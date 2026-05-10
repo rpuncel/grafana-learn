@@ -1,4 +1,8 @@
-"""Deploy all dashboards to the Foundation SDK Grafana instance.
+"""Deploy all resources to the Foundation SDK Grafana instance.
+
+Deploy order:
+  1. Library panels (upsert via /api/library-elements)
+  2. Dashboards (POST to /api/dashboards/db)
 
 Targets http://localhost:3001 (grafana-sdk container, anonymous admin auth).
 """
@@ -20,10 +24,12 @@ from graflearn.dashboards.fleet_overview import build_fleet_overview_dashboard
 from graflearn.dashboards.service_dashboard import build_service_dashboard
 from graflearn.dashboards.logs_drilldown import build_logs_drilldown_dashboard
 from graflearn.dashboards.traces_drilldown import build_traces_drilldown_dashboard
+from graflearn.lib.red_metrics_row import LIBRARY_PANELS
 
 
 GRAFANA_URL = "http://localhost:3001"
 DASHBOARDS_ENDPOINT = f"{GRAFANA_URL}/api/dashboards/db"
+LIBRARY_ELEMENTS_ENDPOINT = f"{GRAFANA_URL}/api/library-elements"
 
 _PANEL_CONTENT = (
     "## Foundation SDK Track — Placeholder\n\n"
@@ -61,6 +67,55 @@ def build_placeholder_dashboard() -> Any:
     )
 
 
+def upsert_library_panel(entry: dict[str, Any]) -> None:
+    uid = entry["uid"]
+    payload = {
+        "uid": uid,
+        "name": entry["name"],
+        "kind": entry["kind"],
+        "model": entry["model"],
+    }
+
+    response = requests.post(
+        LIBRARY_ELEMENTS_ENDPOINT,
+        headers={"Content-Type": "application/json"},
+        data=json.dumps(payload),
+        timeout=10,
+    )
+
+    if response.status_code == 200:
+        print(f"  created library panel: uid={uid}")
+        return
+
+    if response.status_code == 400 and "already exists" in response.text.lower():
+        get_resp = requests.get(f"{LIBRARY_ELEMENTS_ENDPOINT}/{uid}", timeout=10)
+        get_resp.raise_for_status()
+        version = get_resp.json()["result"]["version"]
+        patch_payload = {**payload, "version": version}
+        patch_resp = requests.patch(
+            f"{LIBRARY_ELEMENTS_ENDPOINT}/{uid}",
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(patch_payload),
+            timeout=10,
+        )
+        patch_resp.raise_for_status()
+        print(f"  updated library panel: uid={uid}")
+        return
+
+    print(
+        f"  ERROR: POST {LIBRARY_ELEMENTS_ENDPOINT} returned HTTP {response.status_code}",
+        file=sys.stderr,
+    )
+    print(response.text, file=sys.stderr)
+    sys.exit(1)
+
+
+def deploy_library_panels() -> None:
+    print(f"Deploying library panels to {GRAFANA_URL}...")
+    for entry in LIBRARY_PANELS:
+        upsert_library_panel(entry)
+
+
 def deploy_dashboard(dashboard: Any) -> None:
     """POST a dashboard payload to the Grafana HTTP API."""
     payload: dict[str, Any] = {
@@ -90,6 +145,8 @@ def deploy_dashboard(dashboard: Any) -> None:
 
 
 def main() -> None:
+    deploy_library_panels()
+
     for dashboard in [
         build_placeholder_dashboard(),
         build_fleet_overview_dashboard(),

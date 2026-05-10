@@ -1,6 +1,6 @@
 """Service Dashboard — Foundation SDK track.
 
-$service query variable; three panels: request rate, error rate, latency p99.
+$service query variable; RED metrics panels referenced from library elements.
 """
 
 from __future__ import annotations
@@ -8,8 +8,6 @@ from __future__ import annotations
 from typing import Any
 
 from grafana_foundation_sdk.builders.dashboard import Dashboard, DashboardLink, QueryVariable
-from grafana_foundation_sdk.builders.prometheus import Dataquery as PrometheusQuery
-from grafana_foundation_sdk.builders.timeseries import Panel as TimeseriesPanel
 from grafana_foundation_sdk.models.dashboard import (
     DataSourceRef,
     DashboardLinkType,
@@ -17,12 +15,7 @@ from grafana_foundation_sdk.models.dashboard import (
     VariableRefresh,
 )
 
-_TRACES_DRILLDOWN_LINK = (
-    DashboardLink("View Traces")
-    .url("/d/traces-drilldown?var-service=${service}&${__url_time_range}")
-    .type(DashboardLinkType.LINK)
-    .target_blank(False)
-)
+from graflearn.lib.red_metrics_row import build_error_rate_ref, build_latency_ref, build_rate_ref
 
 _PROMETHEUS = DataSourceRef(type_val="prometheus", uid="prometheus")
 
@@ -37,60 +30,6 @@ def build_service_dashboard() -> Any:
         .include_all(False)
     )
 
-    rate_panel = (
-        TimeseriesPanel()
-        .title("Request Rate")
-        .datasource(_PROMETHEUS)
-        .with_target(
-            PrometheusQuery()
-            .datasource(_PROMETHEUS)
-            .expr(
-                "sum(rate(http_server_request_duration_seconds_count"
-                '{service_name="$service"}[$__rate_interval]))'
-            )
-            .legend_format("req/s")
-        )
-        .unit("reqps")
-        .grid_pos(GridPos(h=8, w=12, x=0, y=0))
-    )
-
-    error_rate_panel = (
-        TimeseriesPanel()
-        .title("Error Rate")
-        .datasource(_PROMETHEUS)
-        .with_target(
-            PrometheusQuery()
-            .datasource(_PROMETHEUS)
-            .expr(
-                "sum(rate(http_server_request_duration_seconds_count"
-                '{service_name="$service", http_response_status_code=~"5.."}[$__rate_interval]))\n'
-                "/ sum(rate(http_server_request_duration_seconds_count"
-                '{service_name="$service"}[$__rate_interval]))'
-            )
-            .legend_format("error rate")
-        )
-        .unit("percentunit")
-        .grid_pos(GridPos(h=8, w=12, x=12, y=0))
-    )
-
-    latency_panel = (
-        TimeseriesPanel()
-        .title("Request Duration p99")
-        .datasource(_PROMETHEUS)
-        .with_target(
-            PrometheusQuery()
-            .datasource(_PROMETHEUS)
-            .expr(
-                "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket"
-                '{service_name="$service"}[$__rate_interval])) by (le))'
-            )
-            .legend_format("p99")
-        )
-        .unit("s")
-        .data_links([_TRACES_DRILLDOWN_LINK])
-        .grid_pos(GridPos(h=8, w=24, x=0, y=8))
-    )
-
     return (
         Dashboard("Service Dashboard")
         .uid("service-dashboard")
@@ -102,9 +41,9 @@ def build_service_dashboard() -> Any:
         .timezone("browser")
         .refresh("30s")
         .with_variable(service_var)
-        .with_panel(rate_panel)
-        .with_panel(error_rate_panel)
-        .with_panel(latency_panel)
+        .with_panel(build_rate_ref(GridPos(h=8, w=12, x=0, y=0)))
+        .with_panel(build_error_rate_ref(GridPos(h=8, w=12, x=12, y=0)))
+        .with_panel(build_latency_ref(GridPos(h=8, w=24, x=0, y=8)))
         .link(
             DashboardLink("Fleet Overview")
             .url("/d/fleet-overview")
