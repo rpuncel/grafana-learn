@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from grafana_foundation_sdk.builders.dashboard import Panel
+from grafana_foundation_sdk.builders.dashboard import DashboardLink, Panel
 from grafana_foundation_sdk.builders.prometheus import Dataquery as PrometheusQuery
 from grafana_foundation_sdk.builders.timeseries import Panel as TimeseriesPanel
 from grafana_foundation_sdk.cog.encoder import JSONEncoder
@@ -39,7 +39,7 @@ def _build_rate_model() -> TimeseriesPanel:
             PrometheusQuery()
             .datasource(_PROMETHEUS)
             .expr(
-                "sum(rate(http_server_request_duration_seconds_count"
+                "sum by (service_name)(rate(http_server_request_duration_seconds_count"
                 '{service_name="$service"}[$__rate_interval]))'
             )
             .legend_format("req/s")
@@ -57,14 +57,18 @@ def _build_error_rate_model() -> TimeseriesPanel:
             PrometheusQuery()
             .datasource(_PROMETHEUS)
             .expr(
-                "sum(rate(http_server_request_duration_seconds_count"
+                "sum by (service_name)(rate(http_server_request_duration_seconds_count"
                 '{service_name="$service", http_response_status_code=~"5.."}[$__rate_interval]))\n'
-                "/ sum(rate(http_server_request_duration_seconds_count"
+                "/ sum by (service_name)(rate(http_server_request_duration_seconds_count"
                 '{service_name="$service"}[$__rate_interval]))'
             )
             .legend_format("error rate")
         )
         .unit("percentunit")
+        .data_links([
+            DashboardLink("Go to Logs")
+            .url("/d/logs-drilldown?var-service=${__field.labels.service_name}&${__url_time_range}")
+        ])
     )
 
 
@@ -77,8 +81,8 @@ def _build_latency_model() -> TimeseriesPanel:
             PrometheusQuery()
             .datasource(_PROMETHEUS)
             .expr(
-                "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket"
-                '{service_name="$service"}[$__rate_interval])) by (le))'
+                "histogram_quantile(0.99, sum by (le, service_name)(rate(http_server_request_duration_seconds_bucket"
+                '{service_name="$service"}[$__rate_interval])))'
             )
             .legend_format("p99")
         )

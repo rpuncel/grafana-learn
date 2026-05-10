@@ -13,7 +13,7 @@ local ratePanel =
   + ts.queryOptions.withTargets([
     promQuery.new(
       'prometheus',
-      'sum(rate(http_server_request_duration_seconds_count{service_name="$service"}[$__rate_interval]))',
+      'sum by (service_name)(rate(http_server_request_duration_seconds_count{service_name="$service"}[$__rate_interval]))',
     )
     + promQuery.withLegendFormat('req/s'),
   ])
@@ -26,14 +26,19 @@ local errorRatePanel =
     promQuery.new(
       'prometheus',
       |||
-        sum(rate(http_server_request_duration_seconds_count{service_name="$service", http_response_status_code=~"5.."}[$__rate_interval]))
+        sum by (service_name)(rate(http_server_request_duration_seconds_count{service_name="$service", http_response_status_code=~"5.."}[$__rate_interval]))
         /
-        sum(rate(http_server_request_duration_seconds_count{service_name="$service"}[$__rate_interval]))
+        sum by (service_name)(rate(http_server_request_duration_seconds_count{service_name="$service"}[$__rate_interval]))
       |||,
     )
     + promQuery.withLegendFormat('error rate'),
   ])
-  + ts.standardOptions.withUnit('percentunit');
+  + ts.standardOptions.withUnit('percentunit')
+  + ts.standardOptions.withLinks([{
+      title: 'Go to Logs',
+      url: '/d/logs-drilldown?var-service=${__field.labels.service_name}&${__url_time_range}',
+      targetBlank: false,
+    }]);
 
 local latencyPanel =
   ts.new('Request Duration p99')
@@ -41,7 +46,7 @@ local latencyPanel =
   + ts.queryOptions.withTargets([
     promQuery.new(
       'prometheus',
-      'histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket{service_name="$service"}[$__rate_interval])) by (le))',
+      'histogram_quantile(0.99, sum by (le, service_name)(rate(http_server_request_duration_seconds_bucket{service_name="$service"}[$__rate_interval])))',
     )
     + promQuery.withLegendFormat('p99'),
   ])
