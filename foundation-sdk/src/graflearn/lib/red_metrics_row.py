@@ -39,7 +39,7 @@ def _build_rate_model() -> TimeseriesPanel:
             PrometheusQuery()
             .datasource(_PROMETHEUS)
             .expr(
-                "sum(rate(http_server_request_duration_seconds_count"
+                "sum by (service_name)(rate(http_server_request_duration_seconds_count"
                 '{service_name="$service"}[$__rate_interval]))'
             )
             .legend_format("req/s")
@@ -57,9 +57,9 @@ def _build_error_rate_model() -> TimeseriesPanel:
             PrometheusQuery()
             .datasource(_PROMETHEUS)
             .expr(
-                "sum(rate(http_server_request_duration_seconds_count"
+                "sum by (service_name)(rate(http_server_request_duration_seconds_count"
                 '{service_name="$service", http_response_status_code=~"5.."}[$__rate_interval]))\n'
-                "/ sum(rate(http_server_request_duration_seconds_count"
+                "/ sum by (service_name)(rate(http_server_request_duration_seconds_count"
                 '{service_name="$service"}[$__rate_interval]))'
             )
             .legend_format("error rate")
@@ -77,8 +77,8 @@ def _build_latency_model() -> TimeseriesPanel:
             PrometheusQuery()
             .datasource(_PROMETHEUS)
             .expr(
-                "histogram_quantile(0.99, sum(rate(http_server_request_duration_seconds_bucket"
-                '{service_name="$service"}[$__rate_interval])) by (le))'
+                "histogram_quantile(0.99, sum by (le, service_name)(rate(http_server_request_duration_seconds_bucket"
+                '{service_name="$service"}[$__rate_interval])))'
             )
             .legend_format("p99")
         )
