@@ -1,7 +1,9 @@
 local g = import 'github.com/grafana/grafonnet/gen/grafonnet-v11.4.0/main.libsonnet';
 
 local ts = g.panel.timeSeries;
+local ng = g.panel.nodeGraph;
 local promQuery = g.query.prometheus;
+local tempoQuery = g.query.tempo;
 
 // Data link: clicking a series navigates to the Service Dashboard for that service.
 local serviceDashboardLink = {
@@ -42,6 +44,16 @@ local errorRatePanel =
   + ts.standardOptions.withLinks([serviceDashboardLink])
   + ts.panelOptions.withGridPos(h=8, w=24, x=0, y=8);
 
+local nodeGraphPanel =
+  ng.new('Service Topology')
+  + ng.queryOptions.withDatasource('tempo', 'tempo')
+  + ng.queryOptions.withTargets([
+    tempoQuery.new('tempo', '', [])
+    + tempoQuery.withQueryType('serviceMap')
+    + { refId: 'A' },
+  ])
+  + ng.panelOptions.withGridPos(h=12, w=24, x=0, y=16);
+
 g.dashboard.new('Fleet Overview')
 + g.dashboard.withUid('fleet-overview')
 + g.dashboard.withDescription('All services at a glance — request rate and error rate. Click a series to open the Service Dashboard for that service.')
@@ -52,4 +64,4 @@ g.dashboard.new('Fleet Overview')
   g.dashboard.link.link.new('Service Dashboard', '/d/service-dashboard')
   + { keepTime: true, targetBlank: false },
 ])
-+ g.dashboard.withPanels([ratePanel, errorRatePanel])
++ g.dashboard.withPanels([ratePanel, errorRatePanel, nodeGraphPanel])

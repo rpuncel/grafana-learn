@@ -9,11 +9,14 @@ from __future__ import annotations
 from typing import Any
 
 from grafana_foundation_sdk.builders.dashboard import Dashboard, DashboardLink
+from grafana_foundation_sdk.builders.nodegraph import Panel as NodeGraphPanel
 from grafana_foundation_sdk.builders.prometheus import Dataquery as PrometheusQuery
+from grafana_foundation_sdk.builders.tempo import TempoQuery
 from grafana_foundation_sdk.builders.timeseries import Panel as TimeseriesPanel
 from grafana_foundation_sdk.models.dashboard import DataSourceRef, DashboardLinkType, GridPos
 
 _PROMETHEUS = DataSourceRef(type_val="prometheus", uid="prometheus")
+_TEMPO = DataSourceRef(type_val="tempo", uid="tempo")
 
 _SERVICE_DASHBOARD_DATA_LINK = (
     DashboardLink("Open Service Dashboard")
@@ -58,6 +61,20 @@ def build_fleet_overview_dashboard() -> Any:
         .grid_pos(GridPos(h=8, w=24, x=0, y=8))
     )
 
+    node_graph_panel = (
+        NodeGraphPanel()
+        .title("Service Topology")
+        .datasource(_TEMPO)
+        .with_target(
+            TempoQuery()
+            .datasource(_TEMPO)
+            .query_type("serviceMap")
+            .query("")
+            .ref_id("A")
+        )
+        .grid_pos(GridPos(h=12, w=24, x=0, y=16))
+    )
+
     return (
         Dashboard("Fleet Overview")
         .uid("fleet-overview")
@@ -70,6 +87,7 @@ def build_fleet_overview_dashboard() -> Any:
         .refresh("30s")
         .with_panel(rate_panel)
         .with_panel(error_rate_panel)
+        .with_panel(node_graph_panel)
         .link(
             DashboardLink("Service Dashboard")
             .url("/d/service-dashboard")

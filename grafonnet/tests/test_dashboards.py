@@ -45,12 +45,13 @@ class TestFleetOverview:
         assert self.dash["refresh"] == "30s"
 
     def test_panel_count(self):
-        assert len(self.dash["panels"]) == 2
+        assert len(self.dash["panels"]) == 3
 
     def test_panel_titles(self):
         titles = [p["title"] for p in self.dash["panels"]]
         assert "Request Rate by Service" in titles
         assert "Error Rate by Service" in titles
+        assert "Service Topology" in titles
 
     def test_panels_full_width(self):
         for panel in self.dash["panels"]:
@@ -58,7 +59,8 @@ class TestFleetOverview:
 
     def test_panel_data_links(self):
         expected_url = "/d/service-dashboard?var-service=${__field.labels.service_name}"
-        for panel in self.dash["panels"]:
+        ts_panels = [p for p in self.dash["panels"] if p["type"] == "timeseries"]
+        for panel in ts_panels:
             links = panel["fieldConfig"]["defaults"]["links"]
             assert any(link["url"] == expected_url for link in links)
 
@@ -67,8 +69,21 @@ class TestFleetOverview:
         assert "/d/service-dashboard" in urls
 
     def test_prometheus_datasource(self):
-        for panel in self.dash["panels"]:
+        ts_panels = [p for p in self.dash["panels"] if p["type"] == "timeseries"]
+        for panel in ts_panels:
             assert panel["datasource"]["type"] == "prometheus"
+
+    def test_node_graph_panel(self):
+        assert any(p["type"] == "nodeGraph" for p in self.dash["panels"])
+
+    def test_node_graph_datasource_tempo(self):
+        ng = next(p for p in self.dash["panels"] if p["type"] == "nodeGraph")
+        assert ng["datasource"]["type"] == "tempo"
+        assert ng["datasource"]["uid"] == "tempo"
+
+    def test_node_graph_query_type(self):
+        ng = next(p for p in self.dash["panels"] if p["type"] == "nodeGraph")
+        assert ng["targets"][0]["queryType"] == "serviceMap"
 
 
 class TestServiceDashboard:

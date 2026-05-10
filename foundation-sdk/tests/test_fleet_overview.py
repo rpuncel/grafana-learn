@@ -32,13 +32,14 @@ def test_refresh():
 
 
 def test_panel_count():
-    assert len(_serialise()["panels"]) == 2
+    assert len(_serialise()["panels"]) == 3
 
 
 def test_panel_titles():
     titles = [p["title"] for p in _serialise()["panels"]]
     assert "Request Rate by Service" in titles
     assert "Error Rate by Service" in titles
+    assert "Service Topology" in titles
 
 
 def test_panels_full_width():
@@ -48,7 +49,8 @@ def test_panels_full_width():
 
 def test_panel_data_links():
     expected_url = "/d/service-dashboard?var-service=${__field.labels.service_name}"
-    for panel in _serialise()["panels"]:
+    ts_panels = [p for p in _serialise()["panels"] if p["type"] == "timeseries"]
+    for panel in ts_panels:
         links = panel["fieldConfig"]["defaults"]["links"]
         assert any(link["url"] == expected_url for link in links)
 
@@ -59,8 +61,24 @@ def test_dashboard_link_to_service_dashboard():
 
 
 def test_prometheus_datasource():
-    for panel in _serialise()["panels"]:
+    ts_panels = [p for p in _serialise()["panels"] if p["type"] == "timeseries"]
+    for panel in ts_panels:
         assert panel["datasource"]["type"] == "prometheus"
+
+
+def test_node_graph_panel():
+    assert any(p["type"] == "nodeGraph" for p in _serialise()["panels"])
+
+
+def test_node_graph_datasource_tempo():
+    ng = next(p for p in _serialise()["panels"] if p["type"] == "nodeGraph")
+    assert ng["datasource"]["type"] == "tempo"
+    assert ng["datasource"]["uid"] == "tempo"
+
+
+def test_node_graph_query_type():
+    ng = next(p for p in _serialise()["panels"] if p["type"] == "nodeGraph")
+    assert ng["targets"][0]["queryType"] == "serviceMap"
 
 
 def test_serialises_to_valid_json():

@@ -77,6 +77,28 @@ QueryVariable('service')
 DataSourceRef(type_val='prometheus', uid='prometheus')
 ```
 
+## NodeGraphPanel builder
+
+```python
+from grafana_foundation_sdk.builders.nodegraph import Panel as NodeGraphPanel
+from grafana_foundation_sdk.builders.tempo import TempoQuery
+
+NodeGraphPanel()
+  .title(title: str)
+  .datasource(datasource: DataSourceRef)
+  .with_target(target: Builder[...])   # TempoQuery().query_type("serviceMap").query("").ref_id("A")
+  .grid_pos(grid_pos: GridPos)
+```
+
+Service map query (Tempo service graph → Node Graph panel):
+```python
+TempoQuery()
+  .datasource(DataSourceRef(type_val="tempo", uid="tempo"))
+  .query_type("serviceMap")   # returns nodes+edges for Node Graph panel
+  .query("")
+  .ref_id("A")
+```
+
 ## Dashboard builder
 
 ```python
