@@ -15,6 +15,9 @@ All Python work in this repo uses Poetry. Never use `pip`, `pip3`, or `requireme
 
 - Install: `poetry install --no-root --with dev` from within `foundation-sdk/` — plain `poetry install` fails because `packages = [{ include = "." }]` in its pyproject.toml
 - SDK builder API reference: `foundation-sdk/sdk-api-notes.md` — read this before writing SDK dashboard code to avoid needing runtime introspection
+- Grafonnet builder API reference: `grafonnet/grafonnet-api-notes.md` — read this before writing Grafonnet dashboard code to avoid searching vendor files
+
+**After implementing any new panel type or query pattern**, update both `foundation-sdk/sdk-api-notes.md` and `grafonnet/grafonnet-api-notes.md` before closing the issue.
 
 ## Agent skills
 
