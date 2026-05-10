@@ -12,9 +12,17 @@ The stack monitors six synthetic services (frontend, checkout, cart, payment, sh
 
 The same dashboard hierarchy is implemented independently in two tracks, enabling direct comparison of the toolchains.
 
-## Quick start
+## Prerequisites
 
-**Requirements:** Docker, Docker Compose, Python 3.11+, Poetry, jsonnet, jb
+| Tool | Version | Install |
+|---|---|---|
+| Docker + Docker Compose | latest | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| Python | 3.11+ | [python.org/downloads](https://www.python.org/downloads/) |
+| Poetry | latest | [python-poetry.org/docs](https://python-poetry.org/docs/) |
+| jsonnet | latest | [github.com/google/go-jsonnet](https://github.com/google/go-jsonnet) |
+| jb (Jsonnet Bundler) | latest | [github.com/jsonnet-bundler/jsonnet-bundler](https://github.com/jsonnet-bundler/jsonnet-bundler) |
+
+## Quick start
 
 ```bash
 # Start the observability stack and metric generators
