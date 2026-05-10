@@ -37,7 +37,7 @@
       "Bash(curl -s http://localhost:3000/api/datasources)",
       "Bash(curl -s http://localhost:3001/api/datasources)",
       "Bash(python3 -c \"import sys,json; ds=json.load\\(sys.stdin\\); [print\\(d['uid'], d['type'], d['url']\\) for d in ds] if ds else print\\('empty'\\)\")",
-      "Bash(make deploy-grafonnet *)"
+      "Bash(make deploy-grafonnet *)",
       "Bash(make deploy *)"
     ]
   }

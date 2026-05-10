@@ -19,7 +19,9 @@
       "Bash(curl -s \"http://localhost:3200/api/traces/815aad55e50197f4da996c778b6c2f0\")",
       "Bash(curl -s \"http://localhost:3200/api/search?q=%7Bresource.service.name%3D%22cartservice%22%7D&limit=5&spss=3\")",
       "Bash(curl -s \"http://localhost:3000/api/datasources/proxy/uid/tempo/api/search?q=%7Bresource.service.name%3D%22cartservice%22%7D&limit=5\")",
-      "Bash(make deploy *)"
+      "Bash(make deploy *)",
+      "Bash(date -v-5M +%s)",
+      "Bash(curl -s \"http://localhost:3100/loki/api/v1/query_range?query=%7Bservice_name%3D~%22.%2B%22%7D&limit=3&start=$\\(date -v-5M +%s\\)000000000&end=$\\(date +%s\\)000000000\")"
     ]
   }
 }
