@@ -49,3 +49,34 @@ def test_tempo_has_traces(grafana_url):
     resp.raise_for_status()
     traces = resp.json().get("traces", [])
     assert traces, "No traces found in Tempo for the last hour"
+
+
+def test_loki_datasource_configured(grafana_url):
+    resp = requests.get(f"{grafana_url}/api/datasources/uid/loki", timeout=5)
+    resp.raise_for_status()
+    assert resp.json()["type"] == "loki"
+
+
+def test_loki_has_logs(grafana_url):
+    """At least one service is emitting logs into Loki."""
+    now = int(time.time())
+    resp = requests.get(
+        f"{grafana_url}/api/datasources/proxy/uid/loki/loki/api/v1/query_range",
+        params={"query": '{service_name=~".+"}', "limit": 1, "start": now - 3600, "end": now},
+        timeout=5,
+    )
+    resp.raise_for_status()
+    streams = resp.json().get("data", {}).get("result", [])
+    assert streams, "No log streams found in Loki for the last hour"
+
+
+def test_logs_drilldown_dashboard_deployed(grafana_url):
+    """Logs Drill-down dashboard exists in Grafana with the correct structure."""
+    resp = requests.get(f"{grafana_url}/api/dashboards/uid/logs-drilldown", timeout=5)
+    resp.raise_for_status()
+    dash = resp.json()["dashboard"]
+    assert dash["uid"] == "logs-drilldown"
+    assert dash["title"] == "Logs Drill-down"
+    panels = dash.get("panels", [])
+    assert len(panels) == 1
+    assert panels[0]["type"] == "logs"

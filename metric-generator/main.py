@@ -1,7 +1,8 @@
-"""Synthetic HTTP metric + trace generator for Grafana Learning Lab.
+"""Synthetic HTTP metric + trace + log generator for Grafana Learning Lab.
 
 Each container instance simulates one service sending OpenTelemetry
-http.server.request.duration metrics and HTTP server spans to the collector.
+http.server.request.duration metrics, HTTP server spans, and log records
+to the collector.
 
 Environment variables:
   SERVICE_NAME   Name of the simulated service (required)
@@ -11,14 +12,19 @@ Environment variables:
 
 from __future__ import annotations
 
+import logging
 import os
 import random
 import time
 
 from opentelemetry import metrics as otel_metrics
 from opentelemetry import trace as otel_trace
+from opentelemetry._logs import set_logger_provider
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -44,8 +50,18 @@ tracer_provider = TracerProvider(resource=resource)
 tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
 otel_trace.set_tracer_provider(tracer_provider)
 
+# Logs
+log_exporter = OTLPLogExporter(endpoint=OTLP_ENDPOINT, insecure=True)
+logger_provider = LoggerProvider(resource=resource)
+logger_provider.add_log_record_processor(BatchLogRecordProcessor(log_exporter))
+set_logger_provider(logger_provider)
+_handler = LoggingHandler(level=logging.DEBUG, logger_provider=logger_provider)
+logging.getLogger().addHandler(_handler)
+logging.getLogger().setLevel(logging.DEBUG)
+
 meter = otel_metrics.get_meter(__name__)
 tracer = otel_trace.get_tracer(__name__)
+logger = logging.getLogger(__name__)
 
 request_duration = meter.create_histogram(
     "http.server.request.duration",
@@ -88,5 +104,8 @@ while True:
     if status.startswith("5"):
         span.set_status(StatusCode.ERROR)
     span.end(end_time=now_ns)
+
+    log_level = logging.ERROR if status.startswith("5") else logging.INFO
+    logger.log(log_level, "%s / %s %.3fs", method, status, duration_s)
 
     time.sleep(random.uniform(1, 5))
