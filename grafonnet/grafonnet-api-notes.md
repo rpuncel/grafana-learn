@@ -166,3 +166,28 @@ var.query.new('service')
 g.dashboard.link.link.new('Fleet Overview', '/d/fleet-overview')
 + { keepTime: true, targetBlank: false }
 ```
+
+## Dashboard annotations
+
+```jsonnet
+// Deployment event annotation using Grafana native store (queries by tag)
+local deploymentAnnotation =
+  g.dashboard.annotation.withName('Deployments')
+  + g.dashboard.annotation.datasource.withType('grafana')
+  + g.dashboard.annotation.datasource.withUid('-- Grafana --')
+  + g.dashboard.annotation.withIconColor('blue')
+  + g.dashboard.annotation.withEnable(true)
+  + g.dashboard.annotation.withHide(false)     // false = toggle visible in UI
+  + g.dashboard.annotation.target.withType('tags')
+  + g.dashboard.annotation.target.withTags(['deployment'])
+  + g.dashboard.annotation.target.withLimit(100);
+
+// Wire into dashboard
+g.dashboard.new('My Dashboard')
++ g.dashboard.withAnnotations([deploymentAnnotation])
+```
+
+Key fields:
+- `datasource.withUid('-- Grafana --')` — Grafana native annotation store (no external datasource needed)
+- `target.withType('tags')` — query by tag; `'dashboard'` queries annotations created on this specific dashboard
+- `withHide(false)` — show the annotation toggle in the dashboard header; `true` hides it

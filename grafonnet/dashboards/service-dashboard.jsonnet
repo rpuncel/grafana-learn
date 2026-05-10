@@ -2,6 +2,17 @@ local g = import 'github.com/grafana/grafonnet/gen/grafonnet-v11.4.0/main.libson
 
 local var = g.dashboard.variable;
 
+local deploymentAnnotation =
+  g.dashboard.annotation.withName('Deployments')
+  + g.dashboard.annotation.datasource.withType('grafana')
+  + g.dashboard.annotation.datasource.withUid('-- Grafana --')
+  + g.dashboard.annotation.withIconColor('blue')
+  + g.dashboard.annotation.withEnable(true)
+  + g.dashboard.annotation.withHide(false)
+  + g.dashboard.annotation.target.withType('tags')
+  + g.dashboard.annotation.target.withTags(['deployment'])
+  + g.dashboard.annotation.target.withLimit(100);
+
 local serviceVar =
   var.query.new('service')
   + var.query.withDatasource('prometheus', 'prometheus')
@@ -40,4 +51,5 @@ g.dashboard.new('Service Dashboard')
   g.dashboard.link.link.new('Fleet Overview', '/d/fleet-overview')
   + { keepTime: true, targetBlank: false },
 ])
++ g.dashboard.withAnnotations([deploymentAnnotation])
 + g.dashboard.withPanels([rateRef, errorRateRef, latencyRef], setPanelIDs=false)

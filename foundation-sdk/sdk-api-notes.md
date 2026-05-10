@@ -110,8 +110,50 @@ Dashboard('Title')
   .refresh(refresh: str)
   .with_variable(variable: Builder[VariableModel])
   .variables(variables: list[Builder[VariableModel]])
+  .annotation(annotation: Builder[AnnotationQuery])    # add one annotation
+  .annotations(annotations: list[Builder[AnnotationQuery]])  # set all annotations
   .with_panel(panel: Builder[Panel])
   .link(link: Builder[DashboardLink])       # singular — add one link
   .links(links: list[Builder[DashboardLink]])  # plural — set all links at once
   .build()
+```
+
+## AnnotationQuery builder
+
+```python
+from grafana_foundation_sdk.builders.dashboard import AnnotationQuery, AnnotationTarget
+
+# Deployment event annotation using Grafana native store (queries by tag)
+AnnotationQuery()
+  .name(name: str)
+  .datasource(datasource: DataSourceRef)   # DataSourceRef(type_val="grafana", uid="-- Grafana --")
+  .icon_color(icon_color: str)             # e.g. "blue"
+  .enable(enable: bool)                    # True = query runs on every refresh
+  .hide(hide: bool)                        # False = toggle visible in dashboard header
+  .target(target: Builder[AnnotationTarget])
+```
+
+## AnnotationTarget builder
+
+```python
+AnnotationTarget()
+  .type(type_val: str)     # "tags" = query by tag; "dashboard" = this dashboard's annotations only
+  .tags(tags: list[str])   # e.g. ["deployment"]
+  .limit(limit: int)       # max annotations to return, e.g. 100
+  .match_any(match_any: bool)  # True = OR logic across tags; False = AND (default)
+```
+
+Example wiring (Grafana native store, deployment events):
+```python
+deployment_annotation = (
+    AnnotationQuery()
+    .name("Deployments")
+    .datasource(DataSourceRef(type_val="grafana", uid="-- Grafana --"))
+    .icon_color("blue")
+    .enable(True)
+    .hide(False)
+    .target(AnnotationTarget().type("tags").tags(["deployment"]).limit(100))
+)
+
+Dashboard("My Dashboard").annotation(deployment_annotation)
 ```
