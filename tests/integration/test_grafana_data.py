@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import time
 
+import pytest
 import requests
 
 
@@ -80,3 +81,41 @@ def test_logs_drilldown_dashboard_deployed(grafana_url):
     panels = dash.get("panels", [])
     assert len(panels) == 1
     assert panels[0]["type"] == "logs"
+
+
+def test_fleet_overview_has_node_graph_panel(grafana_url):
+    """Fleet Overview includes a Node Graph panel sourced from Tempo's service map."""
+    resp = requests.get(f"{grafana_url}/api/dashboards/uid/fleet-overview", timeout=5)
+    resp.raise_for_status()
+    panels = resp.json()["dashboard"]["panels"]
+    node_graph_panels = [p for p in panels if p["type"] == "nodeGraph"]
+    assert node_graph_panels, "No nodeGraph panel found in Fleet Overview"
+    ng = node_graph_panels[0]
+    assert ng["title"] == "Service Topology"
+    assert ng["datasource"]["type"] == "tempo"
+
+
+def test_fleet_overview_node_graph_query_type(grafana_url):
+    """Node Graph panel on Fleet Overview uses serviceMap query type."""
+    resp = requests.get(f"{grafana_url}/api/dashboards/uid/fleet-overview", timeout=5)
+    resp.raise_for_status()
+    panels = resp.json()["dashboard"]["panels"]
+    ng = next(p for p in panels if p["type"] == "nodeGraph")
+    targets = ng.get("targets", [])
+    assert targets, "Node Graph panel has no query targets"
+    assert targets[0].get("queryType") == "serviceMap"
+
+
+def test_tempo_service_graph_has_data(grafana_url):
+    """Tempo service graph returns at least one node (service) for the OTel Demo stack."""
+    resp = requests.get(
+        f"{grafana_url}/api/datasources/proxy/uid/tempo/api/v1/service-graph",
+        params={"query": "{}"},
+        timeout=5,
+    )
+    if resp.status_code == 404:
+        pytest.skip("Tempo service graph endpoint not available")
+    resp.raise_for_status()
+    data = resp.json()
+    services = data.get("data", {}).get("nodes", [])
+    assert services, "Tempo service graph returned no nodes"
