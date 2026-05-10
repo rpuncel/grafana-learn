@@ -33,7 +33,12 @@ local errorRatePanel =
     )
     + promQuery.withLegendFormat('error rate'),
   ])
-  + ts.standardOptions.withUnit('percentunit');
+  + ts.standardOptions.withUnit('percentunit')
+  + ts.standardOptions.withLinks([{
+      title: 'Go to Logs',
+      url: '/d/logs-drilldown?var-service=${__field.labels.service_name}&${__url_time_range}',
+      targetBlank: false,
+    }]);
 
 local latencyPanel =
   ts.new('Request Duration p99')

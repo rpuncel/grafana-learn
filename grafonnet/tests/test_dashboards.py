@@ -216,6 +216,11 @@ class TestRedMetricsRow:
         links = latency["model"]["fieldConfig"]["defaults"]["links"]
         assert any("/d/traces-drilldown" in link["url"] for link in links)
 
+    def test_error_rate_has_logs_drilldown_link(self):
+        error_rate = next(p for p in self.panels if p["uid"] == "red-metrics-error-rate")
+        links = error_rate["model"]["fieldConfig"]["defaults"]["links"]
+        assert any("/d/logs-drilldown" in link["url"] for link in links)
+
     def test_prometheus_datasource(self):
         for p in self.panels:
             assert p["model"]["datasource"]["type"] == "prometheus"

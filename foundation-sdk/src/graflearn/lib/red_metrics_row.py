@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from grafana_foundation_sdk.builders.dashboard import Panel
+from grafana_foundation_sdk.builders.dashboard import DashboardLink, Panel
 from grafana_foundation_sdk.builders.prometheus import Dataquery as PrometheusQuery
 from grafana_foundation_sdk.builders.timeseries import Panel as TimeseriesPanel
 from grafana_foundation_sdk.cog.encoder import JSONEncoder
@@ -65,6 +65,10 @@ def _build_error_rate_model() -> TimeseriesPanel:
             .legend_format("error rate")
         )
         .unit("percentunit")
+        .data_links([
+            DashboardLink("Go to Logs")
+            .url("/d/logs-drilldown?var-service=${__field.labels.service_name}&${__url_time_range}")
+        ])
     )
 
 
