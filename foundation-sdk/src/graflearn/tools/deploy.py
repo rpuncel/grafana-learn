@@ -30,8 +30,20 @@ from graflearn.lib.red_metrics_row import LIBRARY_PANELS
 
 GRAFANA_URL = "http://localhost:3001"
 ANNOTATIONS_ENDPOINT = f"{GRAFANA_URL}/api/annotations"
+CORRELATIONS_ENDPOINT = f"{GRAFANA_URL}/api/datasources/uid/prometheus/correlations"
 DASHBOARDS_ENDPOINT = f"{GRAFANA_URL}/api/dashboards/db"
 LIBRARY_ELEMENTS_ENDPOINT = f"{GRAFANA_URL}/api/library-elements"
+
+LOGS_CORRELATION = {
+    "label": "Go to Logs",
+    "description": "View logs for this service",
+    "targetUID": "loki",
+    "type": "query",
+    "config": {
+        "field": "service_name",
+        "target": {"expr": '{service_name="${service_name}"}'},
+    },
+}
 
 _PANEL_CONTENT = (
     "## Foundation SDK Track — Placeholder\n\n"
@@ -160,6 +172,35 @@ def seed_deployment_annotation() -> None:
     print("  seeded sample deployment annotation at t-30m")
 
 
+def deploy_correlations() -> None:
+    print(f"Deploying correlations to {GRAFANA_URL}...")
+    resp = requests.get(CORRELATIONS_ENDPOINT, timeout=10)
+    resp.raise_for_status()
+    body = resp.json()
+    existing_list = body.get("correlations", body) if isinstance(body, dict) else body
+    existing = next((c for c in existing_list if c.get("label") == LOGS_CORRELATION["label"]), None)
+
+    if existing is None:
+        r = requests.post(
+            CORRELATIONS_ENDPOINT,
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(LOGS_CORRELATION),
+            timeout=10,
+        )
+        r.raise_for_status()
+        print("  created correlation: Go to Logs (prometheus → loki)")
+    else:
+        uid = existing["uid"]
+        r = requests.patch(
+            f"{CORRELATIONS_ENDPOINT}/{uid}",
+            headers={"Content-Type": "application/json"},
+            data=json.dumps(LOGS_CORRELATION),
+            timeout=10,
+        )
+        r.raise_for_status()
+        print("  updated correlation: Go to Logs (prometheus → loki)")
+
+
 def main() -> None:
     deploy_library_panels()
 
@@ -174,6 +215,8 @@ def main() -> None:
 
     print(f"Seeding sample annotations to {GRAFANA_URL}...")
     seed_deployment_annotation()
+
+    deploy_correlations()
 
 
 if __name__ == "__main__":
