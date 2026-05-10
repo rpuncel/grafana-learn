@@ -6,3 +6,4 @@ __pycache__/
 foundation-sdk/.venv/
 .claude/projects
 .claude/worktrees
+.claude/settings.local.json
