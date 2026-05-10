@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from grafana_foundation_sdk.builders.dashboard import Dashboard, DashboardLink, QueryVariable
+from grafana_foundation_sdk.builders.dashboard import AnnotationQuery, AnnotationTarget, Dashboard, DashboardLink, QueryVariable
 from grafana_foundation_sdk.models.dashboard import (
     DataSourceRef,
     DashboardLinkType,
@@ -30,6 +30,21 @@ def build_service_dashboard() -> Any:
         .include_all(False)
     )
 
+    deployment_annotation = (
+        AnnotationQuery()
+        .name("Deployments")
+        .datasource(DataSourceRef(type_val="grafana", uid="-- Grafana --"))
+        .icon_color("blue")
+        .enable(True)
+        .hide(False)
+        .target(
+            AnnotationTarget()
+            .type("tags")
+            .tags(["deployment"])
+            .limit(100)
+        )
+    )
+
     return (
         Dashboard("Service Dashboard")
         .uid("service-dashboard")
@@ -41,6 +56,7 @@ def build_service_dashboard() -> Any:
         .timezone("browser")
         .refresh("30s")
         .with_variable(service_var)
+        .annotation(deployment_annotation)
         .with_panel(build_rate_ref(GridPos(h=8, w=12, x=0, y=0)))
         .with_panel(build_error_rate_ref(GridPos(h=8, w=12, x=12, y=0)))
         .with_panel(build_latency_ref(GridPos(h=8, w=24, x=0, y=8)))

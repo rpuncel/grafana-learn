@@ -119,3 +119,26 @@ def test_tempo_service_graph_has_data(grafana_url):
     data = resp.json()
     services = data.get("data", {}).get("nodes", [])
     assert services, "Tempo service graph returned no nodes"
+
+
+def test_service_dashboard_deployment_annotation(grafana_url):
+    """Service Dashboard has a Deployments annotation configured using the Grafana native store."""
+    resp = requests.get(f"{grafana_url}/api/dashboards/uid/service-dashboard", timeout=5)
+    resp.raise_for_status()
+    dash = resp.json()["dashboard"]
+    annotations = dash.get("annotations", {}).get("list", [])
+    deployment = next((a for a in annotations if a["name"] == "Deployments"), None)
+    assert deployment is not None, "Deployments annotation not found on service dashboard"
+    assert deployment["datasource"]["uid"] == "-- Grafana --"
+    assert "deployment" in deployment["target"]["tags"]
+
+
+def test_deployment_annotation_seeded(grafana_url):
+    """At least one deployment-tagged annotation exists in the Grafana store (seeded by deploy script)."""
+    resp = requests.get(
+        f"{grafana_url}/api/annotations",
+        params={"tags": "deployment", "limit": 1},
+        timeout=5,
+    )
+    resp.raise_for_status()
+    assert resp.json(), "No deployment annotations found in Grafana store — run make deploy to seed one"

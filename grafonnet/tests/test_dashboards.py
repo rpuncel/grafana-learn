@@ -149,6 +149,27 @@ class TestServiceDashboard:
         urls = [link["url"] for link in self.dash["links"]]
         assert "/d/fleet-overview" in urls
 
+    def test_deployment_annotation_exists(self):
+        annotations = self.dash["annotations"]["list"]
+        assert any(a["name"] == "Deployments" for a in annotations)
+
+    def test_deployment_annotation_datasource(self):
+        ann = next(a for a in self.dash["annotations"]["list"] if a["name"] == "Deployments")
+        assert ann["datasource"]["type"] == "grafana"
+        assert ann["datasource"]["uid"] == "-- Grafana --"
+
+    def test_deployment_annotation_icon_color(self):
+        ann = next(a for a in self.dash["annotations"]["list"] if a["name"] == "Deployments")
+        assert ann["iconColor"] == "blue"
+
+    def test_deployment_annotation_enabled(self):
+        ann = next(a for a in self.dash["annotations"]["list"] if a["name"] == "Deployments")
+        assert ann["enable"] is True
+
+    def test_deployment_annotation_tags(self):
+        ann = next(a for a in self.dash["annotations"]["list"] if a["name"] == "Deployments")
+        assert "deployment" in ann["target"]["tags"]
+
 
 class TestRedMetricsRow:
     def setup_method(self):

@@ -32,6 +32,7 @@
       "Bash(poetry install *)",
       "Bash(poetry run pyright *)",
       "Bash(poetry run pytest *)",
+      "Bash(poetry -C foundation-sdk run pytest *)",
       "Bash(poetry show *)",
       "Bash(curl -fsSL https://raw.githubusercontent.com/*)",
       "Bash(curl -s http://localhost:3000/api/datasources)",

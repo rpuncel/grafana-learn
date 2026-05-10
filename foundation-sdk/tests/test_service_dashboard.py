@@ -98,3 +98,29 @@ def test_serialises_to_valid_json():
     payload = {"dashboard": build_service_dashboard(), "folderId": 0, "overwrite": True}
     parsed = json.loads(json.dumps(payload, cls=JSONEncoder))
     assert parsed["dashboard"]["uid"] == "service-dashboard"
+
+
+def test_deployment_annotation_exists():
+    annotations = _serialise()["annotations"]["list"]
+    assert any(a["name"] == "Deployments" for a in annotations)
+
+
+def test_deployment_annotation_datasource():
+    ann = next(a for a in _serialise()["annotations"]["list"] if a["name"] == "Deployments")
+    assert ann["datasource"]["type"] == "grafana"
+    assert ann["datasource"]["uid"] == "-- Grafana --"
+
+
+def test_deployment_annotation_icon_color():
+    ann = next(a for a in _serialise()["annotations"]["list"] if a["name"] == "Deployments")
+    assert ann["iconColor"] == "blue"
+
+
+def test_deployment_annotation_enabled():
+    ann = next(a for a in _serialise()["annotations"]["list"] if a["name"] == "Deployments")
+    assert ann["enable"] is True
+
+
+def test_deployment_annotation_tags():
+    ann = next(a for a in _serialise()["annotations"]["list"] if a["name"] == "Deployments")
+    assert "deployment" in ann["target"]["tags"]
