@@ -131,3 +131,14 @@ def test_service_dashboard_deployment_annotation(grafana_url):
     assert deployment is not None, "Deployments annotation not found on service dashboard"
     assert deployment["datasource"]["uid"] == "-- Grafana --"
     assert "deployment" in deployment["target"]["tags"]
+
+
+def test_deployment_annotation_seeded(grafana_url):
+    """At least one deployment-tagged annotation exists in the Grafana store (seeded by deploy script)."""
+    resp = requests.get(
+        f"{grafana_url}/api/annotations",
+        params={"tags": "deployment", "limit": 1},
+        timeout=5,
+    )
+    resp.raise_for_status()
+    assert resp.json(), "No deployment annotations found in Grafana store — run make deploy to seed one"

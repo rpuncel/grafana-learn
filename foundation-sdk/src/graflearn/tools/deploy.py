@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from typing import Any
 
 import requests
@@ -28,6 +29,7 @@ from graflearn.lib.red_metrics_row import LIBRARY_PANELS
 
 
 GRAFANA_URL = "http://localhost:3001"
+ANNOTATIONS_ENDPOINT = f"{GRAFANA_URL}/api/annotations"
 DASHBOARDS_ENDPOINT = f"{GRAFANA_URL}/api/dashboards/db"
 LIBRARY_ELEMENTS_ENDPOINT = f"{GRAFANA_URL}/api/library-elements"
 
@@ -144,6 +146,20 @@ def deploy_dashboard(dashboard: Any) -> None:
         sys.exit(1)
 
 
+def seed_deployment_annotation() -> None:
+    """Create a sample deployment annotation if none exists yet."""
+    resp = requests.get(ANNOTATIONS_ENDPOINT, params={"tags": "deployment", "limit": 1}, timeout=10)
+    resp.raise_for_status()
+    if resp.json():
+        print("  sample deployment annotation already exists, skipping")
+        return
+    epoch_ms = int((time.time() - 1800) * 1000)  # 30 min ago — visible in default 1h range
+    payload = {"tags": ["deployment"], "text": "v1.0.0 — sample deployment (seeded by deploy script)", "time": epoch_ms}
+    resp = requests.post(ANNOTATIONS_ENDPOINT, headers={"Content-Type": "application/json"}, data=json.dumps(payload), timeout=10)
+    resp.raise_for_status()
+    print("  seeded sample deployment annotation at t-30m")
+
+
 def main() -> None:
     deploy_library_panels()
 
@@ -155,6 +171,9 @@ def main() -> None:
         build_logs_drilldown_dashboard(),
     ]:
         deploy_dashboard(dashboard)
+
+    print(f"Seeding sample annotations to {GRAFANA_URL}...")
+    seed_deployment_annotation()
 
 
 if __name__ == "__main__":
